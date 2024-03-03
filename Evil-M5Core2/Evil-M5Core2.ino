@@ -728,8 +728,11 @@ void drawMenu() {
 
 
 void handleDnsRequestSerial() {
-    dnsServer.processNextRequest();
-    server.handleClient();
+    if (isCaptivePortalOn) {
+        dnsServer.processNextRequest();
+        server.handleClient();
+    }
+
     if (Serial.available()) {
         String command = Serial.readStringUntil('\n');
         checkSerialCommands(command, false);  
