@@ -464,6 +464,8 @@ if (batteryLevel < 15) {
   M5.Display.println("By 7h30th3r0n3");
   M5.Display.setCursor(102, textY + 45);
   M5.Display.println("v1.1.9 2024");
+  M5.Display.setCursor(115, textY + 70);
+  M5.Display.println("MODIFIED");
   Serial.println("By 7h30th3r0n3");
   Serial.println("-------------------"); 
   M5.Display.setCursor(0 , textY + 120);
@@ -561,50 +563,64 @@ void firstScanWifiNetworks() {
     }
 }
 
-    unsigned long previousMillis = 0;
-    const long interval = 1000; 
+unsigned long previousMillis = 0;
+const long interval = 1000; 
 
+void checkButtonsPressedAndVibrate() {
+    if (M5.BtnA.wasPressed() || M5.BtnB.wasPressed() || M5.BtnC.wasPressed()) {
+        sendVibrationFeedback();
+    }
+}
+
+void sendVibrationFeedback() {
+    M5.Power.setVibration(128);
+    delay(100);
+    M5.Power.setVibration(0);
+}
 
 void loop() {
-  M5.update();
-  handleDnsRequestSerial();
-  if (inMenu) {
-    if (lastIndex != currentIndex) {
-      drawMenu();
-      lastIndex = currentIndex;
-    }
-    handleMenuInput();
-  } else {
-    switch (currentStateKarma) {
-      case StartScanKarma:
-        if (M5.BtnB.wasPressed()) {
-          startScanKarma(); 
-          currentStateKarma = ScanningKarma; 
+    M5.update();
+    handleDnsRequestSerial();
+    if (inMenu) {
+        checkButtonsPressedAndVibrate();
+        if (lastIndex != currentIndex) {
+        drawMenu();
+        lastIndex = currentIndex;
         }
-        break;
+        handleMenuInput();
+    } else {
+        switch (currentStateKarma) {
+        case StartScanKarma:
+            if (M5.BtnB.wasPressed()) {
+                sendVibrationFeedback();
+                startScanKarma(); 
+                currentStateKarma = ScanningKarma; 
+            }
+            break;
 
-      case ScanningKarma:
-        if (M5.BtnB.wasPressed()) {
-          isKarmaMode = true;
-          stopScanKarma();
-          currentStateKarma = ssid_count_Karma > 0 ? StopScanKarma : StartScanKarma;
-        }
-        break;
+        case ScanningKarma:
+            if (M5.BtnB.wasPressed()) {
+                sendVibrationFeedback();
+                isKarmaMode = true;
+                stopScanKarma();
+                currentStateKarma = ssid_count_Karma > 0 ? StopScanKarma : StartScanKarma;
+            }
+            break;
 
-      case StopScanKarma:
+        case StopScanKarma:
+            handleMenuInputKarma(); 
+            break;
+            
+        case SelectSSIDKarma:
         handleMenuInputKarma(); 
         break;
-        
-      case SelectSSIDKarma:
-      handleMenuInputKarma(); 
-      break;
-    }
+        }
 
-    if (M5.BtnB.wasPressed() && currentStateKarma == StartScanKarma) {
-      inMenu = true;
-      isOperationInProgress = false;
+        if (M5.BtnB.wasPressed() && currentStateKarma == StartScanKarma) {
+        inMenu = true;
+        isOperationInProgress = false;
+        }
     }
-  }
 }
 
 
@@ -1198,7 +1214,8 @@ void showWifiList() {
 
 while (!inMenu) {
     M5.update();
-     handleDnsRequestSerial();
+    checkButtonsPressedAndVibrate();
+    handleDnsRequestSerial();
     if (M5.BtnA.wasPressed()) {
       currentListIndex--;
       if (currentListIndex < 0) {
@@ -1285,6 +1302,7 @@ void showWifiDetails(int &networkIndex) {
 
   while (!inMenu) {
     M5.update();
+    checkButtonsPressedAndVibrate();
     handleDnsRequestSerial();
 
     if (M5.BtnC.wasPressed()) {
@@ -1968,6 +1986,7 @@ void changePortal() {
         }
 
         M5.update();
+        checkButtonsPressedAndVibrate();
         if (M5.BtnA.wasPressed()) {
             portalFileIndex = (portalFileIndex - 1 + numPortalFiles) % numPortalFiles;
             needDisplayUpdate = true;
@@ -2030,6 +2049,7 @@ void checkCredentials() {
         }
 
         M5.update();
+        checkButtonsPressedAndVibrate();
         handleDnsRequestSerial(); // Handle any background tasks
 
         // Navigation logic
@@ -2119,10 +2139,12 @@ bool confirmPopup(String message) {
   while (!decisionMade) {
     M5.update();
     if (M5.BtnA.wasPressed()) {
+      sendVibrationFeedback();
       confirm = true;
       decisionMade = true;
     }
     if (M5.BtnC.wasPressed()) {
+      sendVibrationFeedback();
       confirm = false;
       decisionMade = true;
     }
@@ -2205,6 +2227,7 @@ void displayMonitorPage1() {
 
   while (!inMenu) {
       M5.update();
+      checkButtonsPressedAndVibrate();
       handleDnsRequestSerial();
       server.handleClient();
 
@@ -2284,6 +2307,7 @@ void displayMonitorPage2() {
 
     while (!inMenu) {
         M5.update();
+        checkButtonsPressedAndVibrate();
         handleDnsRequestSerial();
         if (M5.BtnA.wasPressed()) {
             displayMonitorPage1(); 
@@ -2364,6 +2388,7 @@ void displayMonitorPage3() {
 
   while (!inMenu) {
       M5.update();
+      checkButtonsPressedAndVibrate();
       handleDnsRequestSerial();
 
       unsigned long currentMillis = millis();
@@ -2434,6 +2459,7 @@ void probeSniffing() {
         handleDnsRequestSerial();
 
         if (M5.BtnB.wasPressed()) {
+            sendVibrationFeedback();
             stopProbeSniffingViaSerial = false;
             isProbeSniffingRunning = false;
             break;
@@ -2479,6 +2505,7 @@ void brightness() {
 
     while (true) {
         M5.update();
+        checkButtonsPressedAndVibrate();
         handleDnsRequestSerial();
         if (M5.BtnA.wasPressed()) {
             currentBrightness = max(minBrightness, currentBrightness - 12);
@@ -2811,6 +2838,7 @@ void stopScanKarma() {
 
 
 void handleMenuInputKarma() {
+    checkButtonsPressedAndVibrate();
     bool stateChanged = false;
 
     if (M5.BtnA.wasPressed()) {
@@ -2933,6 +2961,7 @@ void startAPWithSSIDKarma(const char* ssid) {
                 break;
             }
             if (M5.BtnB.wasPressed()) {
+                sendVibrationFeedback();
                 break;
             }else {
               delay(200);
@@ -3004,6 +3033,7 @@ void listProbes() {
 
     while (selectedIndex == -1) {
         M5.update();
+        checkButtonsPressedAndVibrate();
         handleDnsRequestSerial();
         bool indexChanged = false;
         if (M5.BtnA.wasPressed()) {
@@ -3103,6 +3133,7 @@ void deleteProbe() {
 
   while (selectedIndex == -1) {
       M5.update();
+      checkButtonsPressedAndVibrate();
       handleDnsRequestSerial();
       if (needDisplayUpdate) {
           M5.Display.clear();
@@ -3172,6 +3203,7 @@ int showProbesAndSelect(String probes[], int numProbes) {
 
     while (selectedIndex == -1) {
         M5.update();
+        checkButtonsPressedAndVibrate();
         handleDnsRequestSerial();
         if (needDisplayUpdate) {
             M5.Display.clear();
@@ -3423,6 +3455,7 @@ void probeAttack() {
       }
 
       M5.update();
+      checkButtonsPressedAndVibrate();
       if (M5.BtnA.wasPressed() && currentMillis - lastDebounceTime > debounceDelay) {
           lastDebounceTime = currentMillis;
           delayTime = max(200, delayTime - 100); // min delay
@@ -3637,19 +3670,20 @@ void loopAutoKarma() {
       M5.update();
 
       if (M5.BtnB.wasPressed()) {
-          isAutoKarmaActive = false;
-          isAPDeploying = false;
-          isAutoKarmaActive = false;
-          isInitialDisplayDone = false;
-          inMenu = true;
-          memset(lastSSID, 0, sizeof(lastSSID));
-          memset(lastDeployedSSID, 0, sizeof(lastDeployedSSID));
-          newSSIDAvailable = false;
-          esp_wifi_set_promiscuous(false);
-          Serial.println("-------------------");
-          Serial.println("Karma Auto Attack Stopped....");
-          Serial.println("-------------------");
-          break;
+        sendVibrationFeedback();
+        isAutoKarmaActive = false;
+        isAPDeploying = false;
+        isAutoKarmaActive = false;
+        isInitialDisplayDone = false;
+        inMenu = true;
+        memset(lastSSID, 0, sizeof(lastSSID));
+        memset(lastDeployedSSID, 0, sizeof(lastDeployedSSID));
+        newSSIDAvailable = false;
+        esp_wifi_set_promiscuous(false);
+        Serial.println("-------------------");
+        Serial.println("Karma Auto Attack Stopped....");
+        Serial.println("-------------------");
+        break;
       }
       if (newSSIDAvailable) {
           newSSIDAvailable = false;
@@ -3738,6 +3772,7 @@ void activateAPForAutoKarma(const char* ssid) {
       M5.update();
 
       if (M5.BtnB.wasPressed()) {
+          sendVibrationFeedback();
           memset(lastDeployedSSID, 0, sizeof(lastDeployedSSID));
             if (ledOn){
                 pixels.setPixelColor(0, pixels.Color(0,0,0)); 
@@ -4029,6 +4064,7 @@ void wardrivingMode() {
         }
 
         if (M5.BtnB.isPressed()) {
+            sendVibrationFeedback();
             exitWardriving = true;
             if (confirmPopup("List Open Networks?")) {
                 createKarmaList(maxIndex);
@@ -4322,6 +4358,7 @@ while (!M5.BtnB.isPressed()) {
 
        M5.update();
       if (M5.BtnB.isPressed() && currentMillis - lastDebounceTime > debounceDelay) {
+          sendVibrationFeedback();
           break;
       }
         delay(10);
@@ -4498,6 +4535,7 @@ void deauthDetect() {
   
   while (!btnBPressed) {
   M5.update(); // Mettre à jour l'état des boutons
+  checkButtonsPressedAndVibrate();
   // Gestion du bouton B pour basculer entre le mode auto et statique
   if (M5.BtnB.wasPressed()) {
       unsigned long currentPressTime = millis();
@@ -4705,6 +4743,7 @@ void wallOfFlipper(){
   M5.update(); // Mettre à jour l'état des boutons
   // Gestion du bouton B pour basculer entre le mode auto et statique
   if (M5.BtnB.isPressed()) {
+      sendVibrationFeedback();
       unsigned long currentPressTime = millis();
       if (currentPressTime - lastBtnBPressTime > debounceDelay) {
         lastBtnBPressTime = currentPressTime;
